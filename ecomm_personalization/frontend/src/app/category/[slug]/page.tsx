@@ -119,9 +119,9 @@ export default function CategoryPage() {
       {/* Product Grid */}
       <div className="container mx-auto px-4 pb-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {products.map((product) => (
+          {products.map((product, idx) => (
             <ProductCard
-              key={product.id}
+              key={`${categoryName}-${product.id}-${product.name}-${idx}`}
               id={product.id}
               name={product.name}
               price={product.price}
