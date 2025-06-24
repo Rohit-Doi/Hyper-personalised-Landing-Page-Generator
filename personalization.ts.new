@@ -1,0 +1,517 @@
+import axios, { AxiosResponse } from 'axios';
+
+// Simple logger
+const logger = {
+  info: (message: string, ...args: any[]) => console.log(`[INFO] ${message}`, ...args),
+  error: (message: string, ...args: any[]) => console.error(`[ERROR] ${message}`, ...args),
+  warn: (message: string, ...args: any[]) => console.warn(`[WARN] ${message}`, ...args),
+  debug: (message: string, ...args: any[]) => console.debug(`[DEBUG] ${message}`, ...args),
+};
+
+// Types
+type DeviceType = 'mobile' | 'tablet' | 'desktop';
+type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night';
+type UserSegment = 'new' | 'returning' | 'frequent' | 'loyal' | 'champion';
+type UserIntent = 'browsing' | 'researching' | 'purchasing' | 'reordering';
+
+interface Coordinates {
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+}
+
+interface LocationData {
+  country: string;
+  region: string;
+  city: string;
+  timezone: string;
+  coordinates?: Coordinates;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  imageUrl: string;
+  category: string;
+  brand?: string;
+  rating?: number;
+  reviewCount?: number;
+  inStock?: boolean;
+  discount?: number;
+  tags?: string[];
+  popularity?: number;
+}
+
+interface UserContext {
+  deviceType: DeviceType;
+  timeOfDay: TimeOfDay;
+  location: LocationData | null;
+  referrer: string | null;
+  isNewUser: boolean;
+  sessionId: string;
+  userId: string | null;
+  userSegment?: UserSegment;
+  userIntent?: UserIntent;
+  lastInteraction?: number;
+  sessionStart?: number;
+  pagesViewed?: string[];
+  itemsInCart?: string[];
+  pastPurchases?: string[];
+  viewedProducts?: string[];
+  searchQueries?: string[];
+  preferredCategories?: string[];
+  preferredPriceRange?: {
+    min: number;
+    max: number;
+  };
+}
+
+interface PersonalizationOptions {
+  refresh?: boolean;
+  maxRecommendations?: number;
+  preferredCategories?: string[];
+  excludeViewed?: boolean;
+  excludePurchased?: boolean;
+  priceRange?: {
+    min?: number;
+    max?: number;
+  };
+  sortBy?: 'relevance' | 'price_asc' | 'price_desc' | 'popularity' | 'rating' | 'newest';
+  [key: string]: any;
+}
+
+interface PersonalizationRequest {
+  contentType: string;
+  context: UserContext;
+  userId: string | null;
+  options?: PersonalizationOptions;
+}
+
+interface PersonalizationResponse {
+  success: boolean;
+  data: {
+    recommendations: Product[];
+    sections: {
+      heroBanner?: {
+        title: string;
+        subtitle?: string;
+        ctaText: string;
+        ctaLink: string;
+        imageUrl: string;
+      };
+      featuredCategories?: Array<{
+        id: string;
+        name: string;
+        imageUrl: string;
+        slug: string;
+      }>;
+      personalizedRecommendations?: {
+        title: string;
+        products: Product[];
+      };
+      trendingProducts?: {
+        title: string;
+        products: Product[];
+      };
+      recentlyViewed?: {
+        title: string;
+        products: Product[];
+      };
+    };
+    metadata: {
+      recommendationId: string;
+      recommendationType: 'personalized' | 'trending' | 'popular' | 'similar' | 'fallback';
+      modelVersion: string;
+      generatedAt: string;
+      contextUsed: Partial<UserContext>;
+    };
+  };
+  context: any;
+  timestamp: string;
+}
+
+// Mock data
+const MOCK_PRODUCTS: Product[] = [
+  {
+    id: 'p1',
+    name: 'Wireless Earbuds Pro',
+    price: 129.99,
+    imageUrl: '/images/products/earbuds-pro.jpg',
+    category: 'electronics',
+    brand: 'SoundMaster',
+    rating: 4.5,
+    reviewCount: 128,
+    inStock: true,
+    discount: 15,
+    tags: ['wireless', 'bluetooth', 'noise-cancelling'],
+    popularity: 0.92
+  },
+  // Add more mock products as needed
+];
+
+class PersonalizationService {
+  private static instance: PersonalizationService;
+  private userId: string | null = null;
+  private sessionId: string;
+  private deviceType: DeviceType = 'desktop';
+  private timeOfDay: TimeOfDay = 'afternoon';
+  private location: LocationData | null = null;
+  private referrer: string | null = null;
+  private isNewUser: boolean = true;
+  private apiBaseUrl: string;
+  private userContext: UserContext;
+  private products: Product[] = MOCK_PRODUCTS;
+
+  private constructor() {
+    this.sessionId = this.getOrCreateSessionId();
+    this.apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+    this.userContext = this.getDefaultContext();
+    this.initialize();
+  }
+
+  public static getInstance(): PersonalizationService {
+    if (!PersonalizationService.instance) {
+      PersonalizationService.instance = new PersonalizationService();
+    }
+    return PersonalizationService.instance;
+  }
+
+  private getDefaultContext(): UserContext {
+    return {
+      deviceType: this.deviceType,
+      timeOfDay: this.timeOfDay,
+      location: this.location,
+      referrer: this.referrer,
+      isNewUser: this.isNewUser,
+      sessionId: this.sessionId,
+      userId: this.userId,
+      userSegment: 'new',
+      userIntent: 'browsing',
+      lastInteraction: Date.now(),
+      sessionStart: Date.now(),
+      pagesViewed: [],
+      itemsInCart: [],
+      pastPurchases: [],
+      viewedProducts: [],
+      searchQueries: [],
+      preferredCategories: [],
+    };
+  }
+
+  private initialize(): void {
+    this.detectDeviceType();
+    this.detectTimeOfDay();
+    this.detectReferrer();
+    this.loadUserData();
+    
+    // Initialize location asynchronously
+    this.detectLocation().then(() => {
+      this.updateContext({
+        location: this.location,
+        deviceType: this.deviceType,
+        timeOfDay: this.timeOfDay,
+        referrer: this.referrer,
+        isNewUser: this.isNewUser,
+        sessionId: this.sessionId,
+        userId: this.userId
+      });
+      logger.info('Personalization service initialized');
+    }).catch(error => {
+      logger.error('Error initializing personalization service:', error);
+    });
+  }
+
+  private getOrCreateSessionId(): string {
+    if (typeof window === 'undefined') {
+      return `sess_${Math.random().toString(36).substr(2, 9)}`;
+    }
+
+    let sessionId = localStorage.getItem('sessionId');
+    if (!sessionId) {
+      sessionId = `sess_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('sessionId', sessionId);
+    }
+    return sessionId;
+  }
+
+  private detectDeviceType(): void {
+    if (typeof window === 'undefined') return;
+    
+    const userAgent = navigator.userAgent.toLowerCase();
+    if (/mobile|android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent)) {
+      this.deviceType = 'mobile';
+    } else if (/tablet|ipad|playbook|silk/i.test(userAgent)) {
+      this.deviceType = 'tablet';
+    } else {
+      this.deviceType = 'desktop';
+    }
+  }
+
+  private detectTimeOfDay(): void {
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      this.timeOfDay = 'morning';
+    } else if (hour < 17) {
+      this.timeOfDay = 'afternoon';
+    } else if (hour < 21) {
+      this.timeOfDay = 'evening';
+    } else {
+      this.timeOfDay = 'night';
+    }
+  }
+
+  private async detectLocation(): Promise<void> {
+    try {
+      if (typeof window !== 'undefined' && 'geolocation' in navigator) {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            timeout: 5000,
+            maximumAge: 60000,
+            enableHighAccuracy: true
+          });
+        });
+
+        // In a real app, you would reverse geocode these coordinates
+        this.location = {
+          country: 'Unknown',
+          region: 'Unknown',
+          city: 'Unknown',
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          coordinates: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy
+          }
+        };
+      }
+    } catch (error) {
+      console.warn('Could not get geolocation:', error);
+      this.location = {
+        country: 'Unknown',
+        region: 'Unknown',
+        city: 'Unknown',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      };
+    }
+  }
+
+  private detectReferrer(): void {
+    if (typeof document !== 'undefined') {
+      this.referrer = document.referrer || 'direct';
+    } else {
+      this.referrer = 'direct';
+    }
+  }
+
+  private loadUserData(): void {
+    if (typeof window === 'undefined') return;
+
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+      this.userId = userId;
+      this.isNewUser = false;
+      
+      try {
+        const userData = localStorage.getItem(`user_${userId}`);
+        if (userData) {
+          const parsedData = JSON.parse(userData);
+          this.updateContext({
+            ...parsedData,
+            isNewUser: false
+          });
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    } else {
+      this.userId = `anon_${Math.random().toString(36).substr(2, 9)}`;
+      this.isNewUser = true;
+      localStorage.setItem('userId', this.userId);
+    }
+  }
+
+  public updateContext(updates: Partial<UserContext>): void {
+    this.userContext = {
+      ...this.userContext,
+      ...updates,
+      lastInteraction: Date.now()
+    };
+  }
+
+  public trackEvent(eventName: string, properties: Record<string, any> = {}): void {
+    console.log(`[Event] ${eventName}`, {
+      ...properties,
+      userId: this.userId,
+      sessionId: this.sessionId,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  public async getPersonalizedContent(
+    contentType: string,
+    options: PersonalizationOptions = {}
+  ): Promise<PersonalizationResponse> {
+    try {
+      // In a real app, this would call your backend API
+      // const response = await axios.post(`${this.apiBaseUrl}/api/personalize`, {
+      //   contentType,
+      //   context: this.userContext,
+      //   userId: this.userId,
+      //   options
+      // });
+      // return response.data;
+
+      // Mock response for demo
+      return this.getMockRecommendations(contentType, options);
+    } catch (error) {
+      console.error('Error getting personalized content:', error);
+      return this.getFallbackRecommendations(contentType, options);
+    }
+  }
+
+  public async getProductRecommendations(
+    productId: string,
+    options: PersonalizationOptions = {}
+  ): Promise<Product[]> {
+    const product = this.products.find(p => p.id === productId);
+    if (!product) return [];
+
+    return this.products
+      .filter(p => p.category === product.category && p.id !== productId)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, options.maxRecommendations || 4);
+  }
+
+  public async getCategoryRecommendations(
+    category: string,
+    options: PersonalizationOptions = {}
+  ): Promise<Product[]> {
+    return this.products
+      .filter(p => p.category === category)
+      .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+      .slice(0, options.maxRecommendations || 8);
+  }
+
+  public async getTrendingProducts(
+    options: PersonalizationOptions = {}
+  ): Promise<Product[]> {
+    return [...this.products]
+      .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+      .slice(0, options.maxRecommendations || 6);
+  }
+
+  public async getRecentlyViewed(
+    options: PersonalizationOptions = {}
+  ): Promise<Product[]> {
+    const viewedIds = this.userContext.viewedProducts || [];
+    return this.products
+      .filter(p => viewedIds.includes(p.id))
+      .slice(0, options.maxRecommendations || 4);
+  }
+
+  public async getPersonalizedRecommendations(
+    options: PersonalizationOptions = {}
+  ): Promise<Product[]> {
+    const segment = this.userContext.userSegment || 'new';
+    
+    if (segment === 'new') {
+      return this.getTrendingProducts(options);
+    }
+    
+    const preferredCategories = this.userContext.preferredCategories || [];
+    if (preferredCategories.length > 0) {
+      return this.products
+        .filter(p => preferredCategories.includes(p.category))
+        .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+        .slice(0, options.maxRecommendations || 8);
+    }
+    
+    return this.getTrendingProducts(options);
+  }
+
+  private getMockRecommendations(
+    contentType: string,
+    options: PersonalizationOptions = {}
+  ): Promise<PersonalizationResponse> {
+    return Promise.resolve({
+      success: true,
+      data: {
+        recommendations: this.products.slice(0, options.maxRecommendations || 8),
+        sections: {
+          heroBanner: {
+            title: 'Welcome to Our Store',
+            subtitle: 'Discover amazing products tailored just for you',
+            ctaText: 'Shop Now',
+            ctaLink: '/products',
+            imageUrl: '/images/hero-banner.jpg'
+          },
+          featuredCategories: [
+            { id: 'electronics', name: 'Electronics', imageUrl: '/images/categories/electronics.jpg', slug: 'electronics' },
+            { id: 'fashion', name: 'Fashion', imageUrl: '/images/categories/fashion.jpg', slug: 'fashion' },
+            { id: 'home', name: 'Home & Living', imageUrl: '/images/categories/home.jpg', slug: 'home' },
+            { id: 'beauty', name: 'Beauty', imageUrl: '/images/categories/beauty.jpg', slug: 'beauty' },
+          ],
+          personalizedRecommendations: {
+            title: 'Recommended For You',
+            products: this.products.slice(0, 4)
+          },
+          trendingProducts: {
+            title: 'Trending Now',
+            products: this.products.slice(2, 6)
+          },
+          recentlyViewed: {
+            title: 'Recently Viewed',
+            products: this.products.slice(4, 8)
+          }
+        },
+        metadata: {
+          recommendationId: `rec_${Math.random().toString(36).substr(2, 9)}`,
+          recommendationType: 'personalized',
+          modelVersion: '1.0.0',
+          generatedAt: new Date().toISOString(),
+          contextUsed: this.userContext
+        }
+      },
+      context: this.userContext,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  private getFallbackRecommendations(
+    contentType: string,
+    options: PersonalizationOptions = {}
+  ): PersonalizationResponse {
+    return {
+      success: false,
+      data: {
+        recommendations: this.products.slice(0, options.maxRecommendations || 4),
+        sections: {
+          heroBanner: {
+            title: 'Welcome to Our Store',
+            subtitle: 'Discover our amazing products',
+            ctaText: 'Shop Now',
+            ctaLink: '/products',
+            imageUrl: '/images/fallback-banner.jpg'
+          },
+          featuredCategories: [],
+          personalizedRecommendations: {
+            title: 'Popular Items',
+            products: this.products.slice(0, 4)
+          }
+        },
+        metadata: {
+          recommendationId: `fallback_${Math.random().toString(36).substr(2, 9)}`,
+          recommendationType: 'fallback',
+          modelVersion: '1.0.0',
+          generatedAt: new Date().toISOString(),
+          contextUsed: {}
+        }
+      },
+      context: this.userContext,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+export const personalizationService = PersonalizationService.getInstance();

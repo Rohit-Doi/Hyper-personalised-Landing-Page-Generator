@@ -1,0 +1,198 @@
+@import "tailwindcss";
+
+html {
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f3f4f6; /* bg-gray-100 */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #d1d5db; /* bg-gray-300 */
+  border-radius: 9999px; /* rounded-full */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af; /* hover:bg-gray-400 */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Custom button styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid transparent;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.btn-primary {
+  background-color: #db2777; /* bg-pink-600 */
+  color: #ffffff; /* text-white */
+}
+
+.btn-primary:hover {
+  background-color: #be185d; /* hover:bg-pink-700 */
+}
+
+.btn-primary:focus {
+  --tw-ring-color: #ec4899; /* focus:ring-pink-500 */
+}
+
+.btn-outline {
+  border-color: #d1d5db; /* border-gray-300 */
+  color: #374151; /* text-gray-700 */
+  background-color: #ffffff; /* bg-white */
+}
+
+.btn-outline:hover {
+  background-color: #f9fafb; /* hover:bg-gray-50 */
+}
+
+.btn-outline:focus {
+  --tw-ring-color: #ec4899; /* focus:ring-pink-500 */
+}
+
+/* Form elements */
+.input {
+  display: block;
+  width: 100%;
+  border-radius: 0.375rem;
+  border-color: #d1d5db; /* border-gray-300 */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.input:focus {
+  --tw-border-opacity: 1;
+  border-color: #ec4899; /* focus:border-pink-500 */
+  --tw-ring-color: #ec4899; /* focus:ring-pink-500 */
+}
+
+@media (min-width: 640px) {
+  .input {
+    font-size: 0.875rem; /* sm:text-sm */
+    line-height: 1.25rem;
+  }
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px; /* rounded-full */
+  font-size: 0.75rem; /* text-xs */
+  font-weight: 500;
+}
+
+.badge-primary {
+  background-color: #fce7f3; /* bg-pink-100 */
+  color: #9d174d; /* text-pink-800 */
+}
+
+.badge-secondary {
+  background-color: #f3f4f6; /* bg-gray-100 */
+  color: #1f2937; /* text-gray-800 */
+}
+
+/* Card */
+.card {
+  background-color: #ffffff; /* bg-white */
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border-radius: 0.5rem; /* rounded-lg */
+}
+
+/* Animation */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Product card hover effect */
+.product-card {
+  transition: all 0.3s ease-in-out;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+  overflow: hidden;
+}
+
+.product-card:hover {
+  --tw-translate-y: -0.25rem;
+  --tw-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  --tw-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Custom underline animation */
+.underline-animation {
+  position: relative;
+  display: inline-block;
+}
+
+.underline-animation::after {
+  position: absolute;
+  width: 0;
+  height: 0.125rem;
+  background-color: #db2777; /* bg-pink-600 */
+  bottom: 0;
+  left: 0;
+  transition: all 0.3s ease-in-out;
+  content: '';
+}
+
+.underline-animation:hover::after {
+  width: 100%;
+}
+
+.container {
+  max-width: 80rem; /* max-w-7xl */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.product-image {
+  width: 100%;
+  height: 20rem; /* h-80 */
+  object-fit: cover;
+  transition: transform 0.5s ease-in-out;
+}
+
+.product-image:hover {
+  transform: scale(1.05);
+}
+
+.smooth {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+} 
