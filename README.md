@@ -15,7 +15,7 @@ A full-stack e-commerce platform with advanced personalization, built with Next.
 
 ## Folder Structure
 ```
-<pre>
+
 HPLPGA/
 ├── ecomm_personalization/
 │ ├── backend/
@@ -87,7 +87,7 @@ HPLPGA/
 ├── .gitignore
 ├── LICENSE
 └── README.md
-</pre>
+
 ```
 
 ## Setup Instructions
