@@ -4,6 +4,7 @@ from typing import Dict, Any, Optional, List
 import json
 import logging
 from datetime import datetime
+import random
 
 # Import our services
 from services.recommendation_engine import RecommendationEngine
@@ -111,14 +112,8 @@ async def get_personalized_content(
 ):
     try:
         logger.info(f"Received personalization request: {data}")
-        
-        # Get user ID from request or generate a new one
         user_id = data.userId or request.headers.get("x-user-id") or f"anon_{request.client.host}"
-        
-        # Get recommendation type based on content type
         recommendation_type = data.contentType
-        
-        # Prepare context for recommendation engine
         context = {
             "user_id": user_id,
             "device_type": data.context.get("deviceType"),
@@ -128,19 +123,35 @@ async def get_personalized_content(
             "is_new_user": data.context.get("isNewUser", True),
             "session_id": data.context.get("sessionId")
         }
-        
-        # Get recommendations
-        recommendations = recommendation_engine.get_recommendations(
-            user_id=user_id if user_id.startswith("u") else None,
-            context=context,
-            n_recommendations=8
-        )
-        
-        # Generate response based on content type
+        # --- A/B Testing Assignment ---
+        ab_group = random.choice(["A", "B"])
+        logger.info(f"User {user_id} assigned to A/B group: {ab_group}")
+        # --- Route to different strategies ---
+        if ab_group == "A":
+            recommendations = recommendation_engine.get_recommendations(
+                user_id=user_id if user_id.startswith("u") else None,
+                context=context,
+                n_recommendations=8
+            )
+            strategy_used = "collaborative_filtering"
+        else:
+            # Use matrix factorization recommender for group B
+            recommendations = recommendation_engine.get_recommendations(
+                user_id=user_id if user_id.startswith("u") else None,
+                context=context,
+                n_recommendations=8,
+                strategy="matrix_factorization"
+            )
+            strategy_used = "matrix_factorization"
+        # --- Log recommendations and group ---
+        logger.info(f"Recommendations for user {user_id} (group {ab_group}, strategy {strategy_used}): {recommendations['recommended_products']}")
+        # ... existing code for response ...
         response = {
             "timestamp": datetime.utcnow().isoformat(),
             "recommendation_type": recommendations["recommendation_type"],
             "explanation": recommendations["explanation"],
+            "ab_group": ab_group,
+            "strategy_used": strategy_used,
             "content": {
                 "heroBanner": {
                     "title": "Welcome to Our Store",
@@ -179,39 +190,36 @@ async def get_personalized_content(
             },
             "context": context
         }
-        
-        # Add personalized greeting for logged-in users
         if user_id.startswith("u"):
             user_profile = next((u for u in MOCK_USER_PROFILES if u["user_id"] == user_id), None)
             if user_profile:
                 top_category = user_profile.get("top_categories", [""])[0]
                 if top_category:
                     response["content"]["heroBanner"]["subtitle"] = f"Discover amazing {top_category} deals just for you"
-        
-        # Log the response
         logger.info(f"Generated personalized content for user {user_id}")
-        
         return response
-        
     except Exception as e:
         logger.error(f"Error generating personalized content: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-# Analytics endpoint for tracking user events
+# --- Enhanced Analytics Endpoint ---
 @router.post("/api/analytics/track")
 async def track_event(request: Request):
     try:
         event_data = await request.json()
         logger.info(f"Tracking event: {json.dumps(event_data, indent=2)}")
-        
+        # Recognize and log conversion events
+        if event_data.get("event_type") == "conversion":
+            logger.info(f"Conversion event detected for user {event_data.get('user_id')}, details: {event_data}")
+            # Here you could update conversion stats, user profiles, etc.
         # In a real app, you would:
         # 1. Validate the event data
         # 2. Store it in your analytics database
-        # 3. Update user profiles in real-time
+        # 3. Update user profiles in real-time (see below)
         # 4. Trigger any relevant automations
-        
+        # --- Real-time personalization note ---
+        # Future: update user profile in real-time here for instant personalization
         return {"status": "success", "message": "Event tracked successfully"}
-        
     except Exception as e:
         logger.error(f"Error tracking event: {str(e)}", exc_info=True)
         raise HTTPException(status_code=400, detail=str(e))

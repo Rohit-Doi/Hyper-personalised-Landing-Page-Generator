@@ -1,6 +1,8 @@
 import { StarIcon } from '@heroicons/react/20/solid';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ProductCardProps {
   id: string;
@@ -29,8 +31,29 @@ const ProductCard = ({
   isNew = false,
   isTrending = false,
 }: ProductCardProps) => {
+  const [hovered, setHovered] = useState(false);
   return (
-    <div className="group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div
+      className="group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Hover Popup */}
+      <AnimatePresence>
+        {hovered && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute z-20 left-1/2 -translate-x-1/2 -top-4 bg-white border border-gray-200 shadow-lg rounded-lg px-4 py-2 text-center pointer-events-none"
+            style={{ minWidth: 180 }}
+          >
+            <div className="font-semibold text-gray-900 text-base mb-1">{name}</div>
+            <div className="text-pink-700 font-bold text-lg">₹{price.toLocaleString()}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-t-lg bg-gray-200 group-hover:opacity-75">
         <Image
           src={imageUrl}

@@ -7,6 +7,47 @@ from sklearn.pipeline import Pipeline
 import pandas as pd
 from datetime import datetime
 import json
+from surprise import SVD, Dataset, Reader
+from surprise.model_selection import train_test_split
+
+class MatrixFactorizationRecommender:
+    """Matrix Factorization using Surprise SVD."""
+    def __init__(self):
+        self.model = SVD()
+        self.trained = False
+        self.user_map = {}
+        self.item_map = {}
+        self.reverse_user_map = {}
+        self.reverse_item_map = {}
+
+    def fit(self, interactions):
+        """
+        interactions: list of dicts with keys 'user_id', 'item_id', 'rating'
+        """
+        if not interactions:
+            return
+        df = pd.DataFrame(interactions)
+        reader = Reader(rating_scale=(df['rating'].min(), df['rating'].max()))
+        data = Dataset.load_from_df(df[['user_id', 'item_id', 'rating']], reader)
+        trainset = data.build_full_trainset()
+        self.model.fit(trainset)
+        self.trained = True
+        # Build user/item maps for fast lookup
+        self.user_map = {uid: i for i, uid in enumerate(df['user_id'].unique())}
+        self.item_map = {iid: i for i, iid in enumerate(df['item_id'].unique())}
+        self.reverse_user_map = {i: uid for uid, i in self.user_map.items()}
+        self.reverse_item_map = {i: iid for iid, i in self.item_map.items()}
+
+    def recommend(self, user_id, item_ids, n=10):
+        """Recommend top-N items for a user from a list of item_ids."""
+        if not self.trained:
+            return []
+        predictions = []
+        for item_id in item_ids:
+            pred = self.model.predict(user_id, item_id)
+            predictions.append((item_id, pred.est))
+        predictions.sort(key=lambda x: x[1], reverse=True)
+        return [iid for iid, _ in predictions[:n]]
 
 class RecommendationEngine:
     def __init__(self):
@@ -15,6 +56,13 @@ class RecommendationEngine:
         self.user_similarity_model = None
         self.scaler = StandardScaler()
         self.is_trained = False
+        # --- Enhancement: Bandit and Advanced Model Stubs ---
+        self.bandit_strategy = None  # Placeholder for multi-armed bandit
+        self.advanced_model = None   # Placeholder for advanced ML model (e.g., matrix factorization)
+        # --- Matrix Factorization Model ---
+        self.mf_model = MatrixFactorizationRecommender()
+        # --- Feature Engineering Stub ---
+        # Add more user/product/context features here as needed
         
     def train(self, user_profiles: List[Dict], products: List[Dict]):
         """Train the recommendation models."""
@@ -34,6 +82,13 @@ class RecommendationEngine:
         if not df_users.empty:
             self._train_user_similarity(df_users)
             self.is_trained = True
+            # --- Train Matrix Factorization Model ---
+            # For demo, use products_viewed as implicit feedback (rating=1)
+            interactions = []
+            for profile in user_profiles:
+                for pid in profile.get('products_viewed', []):
+                    interactions.append({'user_id': profile['user_id'], 'item_id': pid, 'rating': 1})
+            self.mf_model.fit(interactions)
             return True
             
         return False
@@ -96,9 +151,27 @@ class RecommendationEngine:
         self,
         user_id: Optional[str] = None,
         context: Optional[Dict[str, Any]] = None,
-        n_recommendations: int = 10
+        n_recommendations: int = 10,
+        strategy: Optional[str] = None  # Enhancement: allow explicit strategy
     ) -> Dict[str, Any]:
         """Get personalized recommendations for a user."""
+        # --- Enhancement: Strategy selection logic ---
+        if strategy == "bandit" and self.bandit_strategy:
+            # Placeholder: call bandit strategy here
+            return self.bandit_strategy(user_id, context, n_recommendations)
+        if strategy == "advanced" or strategy == "matrix_factorization":
+            # Use matrix factorization recommender
+            if user_id and self.mf_model.trained:
+                all_items = list(self.product_features.keys())
+                recommended_ids = self.mf_model.recommend(user_id, all_items, n=n_recommendations)
+                recommended_products = [self.product_features[iid] for iid in recommended_ids if iid in self.product_features]
+                return {
+                    'recommendation_type': 'matrix_factorization',
+                    'user_id': user_id,
+                    'recommended_products': recommended_products,
+                    'explanation': 'Matrix factorization-based recommendations'
+                }
+        # Default collaborative filtering
         if user_id and user_id in self.user_profiles and self.is_trained:
             return self._get_personalized_recommendations(user_id, n_recommendations)
         return self._get_cold_start_recommendations(context, n_recommendations)

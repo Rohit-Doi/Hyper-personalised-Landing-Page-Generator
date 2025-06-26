@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { personalizationService } from '@/lib/personalization';
 import ProductRecommendations from '@/components/recommendations/ProductRecommendations';
 
 export default function Home() {
@@ -11,6 +10,8 @@ export default function Home() {
   useEffect(() => {
     const trackPageView = async () => {
       try {
+        // Import personalization service dynamically to avoid SSR issues
+        const { personalizationService } = await import('@/lib/personalization');
         await personalizationService.trackEvent('page_view', {
           page_title: 'Home',
           page_path: '/',
@@ -18,6 +19,7 @@ export default function Home() {
         });
       } catch (error) {
         console.error('Error tracking page view:', error);
+        // Don't throw error, just log it - tracking shouldn't break the page
       }
     };
 
