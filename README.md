@@ -15,9 +15,79 @@ A full-stack e-commerce platform with advanced personalization, built with Next.
 
 ## Folder Structure
 ```
-ecomm_personalization/
-  backend/      # Python FastAPI backend
-  frontend/     # Next.js frontend
+
+HPLPGA/
+├── ecomm_personalization/
+│ ├── backend/
+│ │ ├── alembic/
+│ │ │ ├── env.py
+│ │ │ ├── README
+│ │ │ ├── script.py.mako
+│ │ │ └── versions/
+│ │ │ └── d4d5b5ad4f4d_initial_migration.py
+│ │ ├── alembic.ini
+│ │ ├── app/
+│ │ │ ├── init.py
+│ │ │ ├── api/
+│ │ │ │ ├── personalize/
+│ │ │ │ │ └── route.py
+│ │ │ │ └── v1/
+│ │ │ │ ├── api.py
+│ │ │ │ └── endpoints/
+│ │ │ │ ├── products.py
+│ │ │ │ └── recommendations.py
+│ │ │ ├── core/
+│ │ │ │ └── config.py
+│ │ │ ├── data_processed/ # (keep only if you store processed data, not raw datasets)
+│ │ │ ├── db/
+│ │ │ ├── main.py
+│ │ │ ├── models/
+│ │ │ ├── schemas/
+│ │ │ └── services/
+│ │ ├── Dockerfile
+│ │ ├── docker-compose.yml
+│ │ ├── README.md
+│ │ ├── requirements.txt
+│ │ └── tests/
+│ │ ├── conftest.py
+│ │ ├── recommendation/
+│ │ │ ├── init.py
+│ │ │ ├── test_cold_start_strategy.py
+│ │ │ └── test_personalization_engine.py
+│ │ ├── test_api_endpoints.py
+│ │ ├── test_data_processor.py
+│ │ ├── test_recommendation_service.py
+│ │ └── test_recommendations.py
+│ └── frontend/
+│ ├── components/
+│ ├── jest.config.js
+│ ├── jest.setup.js
+│ ├── lib/
+│ ├── next.config.js
+│ ├── package.json
+│ ├── postcss.config.js
+│ ├── public/
+│ │ ├── accessories/
+│ │ ├── collections/
+│ │ ├── men/
+│ │ ├── women/
+│ │ └── site.webmanifest
+│ ├── src/
+│ │ ├── app/
+│ │ ├── components/
+│ │ ├── config.ts
+│ │ ├── context/
+│ │ ├── data/
+│ │ ├── hooks/
+│ │ ├── lib/
+│ │ └── types/
+│ ├── tailwind.config.js
+│ ├── tsconfig.json
+│ └── README.md
+├── .gitignore
+├── LICENSE
+└── README.md
+
 ```
 
 ## Setup Instructions
