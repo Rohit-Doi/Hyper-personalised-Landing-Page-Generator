@@ -137,5 +137,56 @@ npm run dev
 ## Contributing
 Pull requests are welcome! Please open an issue to discuss major changes.
 
+🛠️ Windows: Resolving "Filename too long" Errors When Cloning
+Why does this happen?
+Windows has a default limitation where file paths (including folder names) cannot exceed 260 characters. Some files in this repository may exceed this limit, causing errors like:
+```text
+error: unable to create file ...: Filename too long
+fatal: unable to checkout working tree
+```
+How to Fix
+1. Enable Long Path Support in Windows
+A. Using the Registry Editor (works on all Windows editions):
+Press <kbd>Win</kbd> + <kbd>R</kbd>, type regedit, and press Enter.
+Navigate to:
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem
+Find the entry named LongPathsEnabled.
+If it doesn’t exist, right-click and create a new DWORD (32-bit) Value named LongPathsEnabled.
+Double-click it and set its value to 1.
+Restart your computer.
+B. Using Group Policy Editor (if available):
+Press <kbd>Win</kbd> + <kbd>R</kbd>, type gpedit.msc, and press Enter.
+Go to:
+Local Computer Policy > Computer Configuration > Administrative Templates > System > Filesystem
+Double-click Enable Win32 long paths and set it to Enabled.
+Restart your computer.
+2. Tell Git to Allow Long Paths
+Open a terminal and run:
+```bash
+git config --system core.longpaths true
+```
+or (if you don’t have admin rights):
+```bash
+git config --global core.longpaths true
+```
+3. Clone to a Short Directory Path
+To further reduce the risk, clone the repository to a directory with a very short path, such as:
+```text
+C:\repo
+```
+If you follow these steps, you should be able to clone and use this repository on Windows without path length issues.
+
+
 ## License
 See [LICENSE](LICENSE) for details.
+
+
+
+
+
+
+
+
+
+
+
