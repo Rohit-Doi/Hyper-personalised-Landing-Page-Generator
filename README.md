@@ -149,18 +149,24 @@ How to Fix
 A. Using the Registry Editor (works on all Windows editions):
 Press <kbd>Win</kbd> + <kbd>R</kbd>, type regedit, and press Enter.
 Navigate to:
+```
 HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem
+```
 Find the entry named LongPathsEnabled.
 If it doesn’t exist, right-click and create a new DWORD (32-bit) Value named LongPathsEnabled.
 Double-click it and set its value to 1.
 Restart your computer.
+<br>
 B. Using Group Policy Editor (if available):
 Press <kbd>Win</kbd> + <kbd>R</kbd>, type gpedit.msc, and press Enter.
 Go to:
+```
 Local Computer Policy > Computer Configuration > Administrative Templates > System > Filesystem
+```
 Double-click Enable Win32 long paths and set it to Enabled.
 Restart your computer.
-2. Tell Git to Allow Long Paths
+<br>
+3. Tell Git to Allow Long Paths
 Open a terminal and run:
 ```bash
 git config --system core.longpaths true
