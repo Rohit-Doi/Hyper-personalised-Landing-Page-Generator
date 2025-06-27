@@ -94,8 +94,8 @@ HPLPGA/
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/Rohit-Doi/hyper-personalized-landing-page.git
-cd hyper-personalized-landing-page
+git clone https://github.com/Rohit-Doi/Hyper-personalized-Landing-Page-Generator.git
+cd Hyper-personalized-Landing-Page-Generator
 ```
 
 ### 2. Backend Setup
