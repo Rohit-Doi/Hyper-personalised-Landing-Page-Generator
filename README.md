@@ -144,27 +144,36 @@ Windows has a default limitation where file paths (including folder names) canno
 error: unable to create file ...: Filename too long
 fatal: unable to checkout working tree
 ```
+<br>
 How to Fix
 1. Enable Long Path Support in Windows
+<br>
 A. Using the Registry Editor (works on all Windows editions):
-Press <kbd>Win</kbd> + <kbd>R</kbd>, type regedit, and press Enter.
-Navigate to:
+1.Press <kbd>Win</kbd> + <kbd>R</kbd>, type regedit, and press Enter.
+<br>
+2. Navigate to:
 ```
 HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem
 ```
-Find the entry named LongPathsEnabled.
+<br>
+3. Find the entry named LongPathsEnabled.
 If it doesn’t exist, right-click and create a new DWORD (32-bit) Value named LongPathsEnabled.
-Double-click it and set its value to 1.
-Restart your computer.
+<br>
+4. Double-click it and set its value to 1.
+<br>
+5.Restart your computer.
 <br>
 B. Using Group Policy Editor (if available):
-Press <kbd>Win</kbd> + <kbd>R</kbd>, type gpedit.msc, and press Enter.
-Go to:
+1. Press <kbd>Win</kbd> + <kbd>R</kbd>, type gpedit.msc, and press Enter.
+<br>
+2. Go to:
 ```
 Local Computer Policy > Computer Configuration > Administrative Templates > System > Filesystem
 ```
-Double-click Enable Win32 long paths and set it to Enabled.
-Restart your computer.
+<br>
+3.Double-click Enable Win32 long paths and set it to Enabled.
+<br>
+4. Restart your computer.
 <br>
 3. Tell Git to Allow Long Paths
 Open a terminal and run:
