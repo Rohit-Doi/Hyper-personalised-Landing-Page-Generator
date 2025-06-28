@@ -1,4 +1,4 @@
-# E-Commerce Personalization Platform
+# Hyper-personalised-Landing-Page-Generator
 
 ## Overview
 A full-stack e-commerce platform with advanced personalization, built with Next.js (frontend) and Python (FastAPI) backend. Features include user-specific recommendations, cold start strategies, Google login, user clustering, and a modern UI.
@@ -13,10 +13,58 @@ A full-stack e-commerce platform with advanced personalization, built with Next.
 - Cart, wishlist, and checkout flows
 - Admin/test endpoints for recommendations
 
-## Folder Structure
+## Prerequisites
+
+### Windows Users: Resolving "Filename too long" Errors
+
+If you encounter errors like `error: unable to create file ...: Filename too long` when cloning on Windows, follow these steps:
+
+#### 1. Enable Long Path Support in Windows
+
+**A. Using the Registry Editor (works on all Windows editions):**
+1. Press `Win + R`, type `regedit`, and press Enter.
+2. Navigate to:  
+   `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem`
+3. Find the entry named `LongPathsEnabled`.  
+   - If it doesn't exist, right-click and create a new `DWORD (32-bit) Value` named `LongPathsEnabled`.
+4. Double-click it and set its value to `1`.
+5. Restart your computer.
+
+**B. Using Group Policy Editor (if available):**
+1. Press `Win + R`, type `gpedit.msc`, and press Enter.
+2. Go to:  
+   `Local Computer Policy > Computer Configuration > Administrative Templates > System > Filesystem`
+3. Double-click **Enable Win32 long paths** and set it to **Enabled**.
+4. Restart your computer.
+
+#### 2. Tell Git to Allow Long Paths
+
+Open a terminal and run:
+
+```sh
+git config --system core.longpaths true
+```
+or (if you don't have admin rights):
+
+```sh
+git config --global core.longpaths true
 ```
 
-HPLPGA/
+#### 3. Clone to a Short Directory Path
+
+To further reduce the risk, clone the repository to a directory with a very short path, such as:
+
+```
+C:\repo
+```
+
+### Required Dependencies
+
+This project uses Firebase for authentication. The `firebase` package is included in the frontend dependencies and will be installed automatically when you run `npm install`.
+
+## Folder Structure
+```
+HPLPG/
 ├── ecomm_personalization/
 │ ├── backend/
 │ │ ├── alembic/
@@ -87,15 +135,14 @@ HPLPGA/
 ├── .gitignore
 ├── LICENSE
 └── README.md
-
 ```
 
 ## Setup Instructions
 
 ### 1. Clone the Repository
 ```bash
-git clone <your-repo-url>
-cd <repo-folder>
+git clone https://github.com/Rohit-Doi/HPLPG
+cd HPLPG
 ```
 
 ### 2. Backend Setup
@@ -120,8 +167,24 @@ uvicorn app.main:app --reload
 cd ../frontend
 npm install
 ```
-- Create a `.env.local` file with your Firebase credentials for Google login.
-- To run the frontend:
+
+**Optional: Verify setup**
+```bash
+node verify-setup.js
+```
+
+**Firebase Configuration:**
+- Create a `.env.local` file with your Firebase credentials for Google login:
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+```
+
+**To run the frontend:**
 ```bash
 npm run dev
 ```

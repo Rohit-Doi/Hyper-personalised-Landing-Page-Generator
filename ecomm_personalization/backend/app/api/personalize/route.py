@@ -128,11 +128,11 @@ async def get_personalized_content(
         logger.info(f"User {user_id} assigned to A/B group: {ab_group}")
         # --- Route to different strategies ---
         if ab_group == "A":
-            recommendations = recommendation_engine.get_recommendations(
-                user_id=user_id if user_id.startswith("u") else None,
-                context=context,
-                n_recommendations=8
-            )
+        recommendations = recommendation_engine.get_recommendations(
+            user_id=user_id if user_id.startswith("u") else None,
+            context=context,
+            n_recommendations=8
+        )
             strategy_used = "collaborative_filtering"
         else:
             # Use matrix factorization recommender for group B
