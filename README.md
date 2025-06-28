@@ -164,7 +164,7 @@ uvicorn app.main:app --reload
 
 ### 3. Frontend Setup
 ```bash
-cd ../frontend
+cd ecomm_personalization/frontend
 npm install
 ```
 
